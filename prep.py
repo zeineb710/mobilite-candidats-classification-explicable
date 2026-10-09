@@ -4,7 +4,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.model_selection import train_test_split
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import MinMaxScaler, OneHotEncoder, OrdinalEncoder, StandardScaler
-
+import re
 
 def convert_ordinal_text(df: pd.DataFrame) -> pd.DataFrame:
     """Spécifique au cas 9 : 'experience' et 'last_new_job' contiennent du texte ('<1', '>20', 'never')."""
@@ -63,6 +63,9 @@ def prepare(df, features, y_col="_y", *, num_impute="median", cat_impute="inconn
         X, y, test_size=test_size, random_state=seed, stratify=y)
     X_tr = pre.fit_transform(X_tr_raw)
     X_te = pre.transform(X_te_raw)
+
+    for d in (X_tr, X_te):
+        d.columns = [re.sub(r"[\[\]<>]", "_", c) for c in d.columns]
 
     return dict(X_train=X_tr, X_test=X_te, y_train=y_tr, y_test=y_te,
                 X_train_raw=X_tr_raw, X_test_raw=X_te_raw,

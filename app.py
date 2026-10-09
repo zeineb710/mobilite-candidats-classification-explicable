@@ -3,6 +3,9 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 from prep import prepare
+from models import NAMES, train_one
+import matplotlib.pyplot as plt
+from sklearn.metrics import roc_curve, precision_recall_curve, roc_auc_score, average_precision_score
 
 st.set_page_config(page_title="Mobilité des candidats", layout="wide")
 st.title("Mobilité des candidats : classification explicable")
@@ -162,3 +165,89 @@ if "prep" in st.session_state:
     st.write("Aperçu des données transformées (train)")
     st.dataframe(p["X_train"].head(10), use_container_width=True)
     st.caption(f"Valeurs manquantes restantes : {int(p['X_train'].isna().sum().sum())}")
+
+    # ---------- MODULE 3 : Modélisation ----------
+st.header("3. Modélisation")
+if "prep" not in st.session_state:
+    st.info("Appliquez d'abord la préparation (Module 2).")
+    st.stop()
+p = st.session_state["prep"]
+
+
+def manual_params(name):
+    k = name
+    if name == "Régression logistique":
+        return {"C": st.select_slider("C (plus petit = modèle plus simple)",
+                                      [0.01, 0.1, 1, 10, 100], 1, key=k + "C")}
+    if name == "Arbre de décision":
+        return {"max_depth": st.slider("Profondeur max", 2, 20, 5, key=k + "d"),
+                "min_samples_leaf": st.slider("Taille min d'une feuille", 1, 100, 20, key=k + "l")}
+    if name == "k plus proches voisins":
+        return {"n_neighbors": st.slider("Nombre de voisins", 1, 101, 15, 2, key=k + "n")}
+    if name == "Random Forest":
+        return {"n_estimators": st.slider("Nombre d'arbres", 50, 500, 200, 50, key=k + "e"),
+                "max_depth": st.slider("Profondeur max", 2, 30, 10, key=k + "d")}
+    return {"n_estimators": st.slider("Nombre d'arbres", 50, 500, 200, 50, key=k + "e"),
+            "max_depth": st.slider("Profondeur max", 2, 10, 4, key=k + "d"),
+            "learning_rate": st.select_slider("Learning rate", [0.01, 0.05, 0.1, 0.2, 0.3], 0.1, key=k + "r")}
+
+
+chosen = st.multiselect("Modèles à entraîner", NAMES, default=NAMES)
+balance = st.checkbox("Compenser le déséquilibre des classes", value=True)
+optimize = st.checkbox("Optimiser automatiquement les hyperparamètres (plus lent)", value=False)
+
+params = {}
+if not optimize:
+    for name in chosen:
+        with st.expander(f"Réglages : {name}"):
+            params[name] = manual_params(name)
+
+if st.button("Entraîner les modèles", type="primary"):
+    if not chosen:
+        st.error("Choisissez au moins un modèle.")
+    else:
+        results, rows = {}, []
+        bar = st.progress(0.0)
+        for i, name in enumerate(chosen):
+            with st.spinner(f"Entraînement : {name}..."):
+                model, proba, row = train_one(name, params.get(name, {}), p["X_train"], p["y_train"],
+                                              p["X_test"], p["y_test"], balance, optimize)
+            results[name] = {"model": model, "proba": proba}
+            rows.append(row)
+            bar.progress((i + 1) / len(chosen))
+        st.session_state["results"] = results
+        st.session_state["table"] = pd.DataFrame(rows).sort_values("AUC-ROC", ascending=False)
+
+if "table" in st.session_state:
+    st.subheader("Comparaison des modèles (jeu de test, seuil 0,5)")
+    st.dataframe(st.session_state["table"].round(3), width="stretch", hide_index=True)
+    best = st.session_state["table"].iloc[0]
+    st.success(f"Meilleur AUC-ROC : {best['Modèle']} ({best['AUC-ROC']:.3f})")
+    y_te = p["y_test"]
+    results = st.session_state["results"]
+
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Courbes ROC")
+        fig, ax = plt.subplots(figsize=(5, 4))
+        for name, r in results.items():
+            fpr, tpr, _ = roc_curve(y_te, r["proba"])
+            ax.plot(fpr, tpr, label=f"{name} ({roc_auc_score(y_te, r['proba']):.3f})")
+        ax.plot([0, 1], [0, 1], "k--", label="Hasard")
+        ax.set_xlabel("Taux de faux positifs")
+        ax.set_ylabel("Taux de vrais positifs (rappel)")
+        ax.legend(fontsize=7)
+        st.pyplot(fig)
+
+    with col2:
+        st.subheader("Courbes Précision-Rappel")
+        fig, ax = plt.subplots(figsize=(5, 4))
+        for name, r in results.items():
+            prec, rec, _ = precision_recall_curve(y_te, r["proba"])
+            ax.plot(rec, prec, label=f"{name} ({average_precision_score(y_te, r['proba']):.3f})")
+        ax.axhline(y_te.mean(), color="k", linestyle="--", label="Hasard")
+        ax.set_xlabel("Rappel")
+        ax.set_ylabel("Précision")
+        ax.legend(fontsize=7)
+        st.pyplot(fig)
