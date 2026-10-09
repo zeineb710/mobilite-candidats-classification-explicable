@@ -69,4 +69,4 @@ def prepare(df, features, y_col="_y", *, num_impute="median", cat_impute="inconn
 
     return dict(X_train=X_tr, X_test=X_te, y_train=y_tr, y_test=y_te,
                 X_train_raw=X_tr_raw, X_test_raw=X_te_raw,
-                preprocessor=pre, num_cols=num_cols, cat_cols=cat_cols)
+                preprocessor=pre, num_cols=num_cols, cat_cols=cat_cols,convert_ordinal=convert_ordinal)
