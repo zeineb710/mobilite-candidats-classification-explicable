@@ -64,28 +64,28 @@ Le genre porte une part très faible de l'importance SHAP (1,6 % pour XGBoost), 
 ## Captures d'écran
 
 ### 1. Données
-(docs/captures/donnees.png)
+![Données](docs/captures/donnees.png)
 
 ### 2. Préparation
-(docs/captures/preparation.png)
+![Préparation](docs/captures/preparation.png)
 
 ### 3. Modélisation et comparaison
-(docs/captures/modelisation.png)
+![Comparaison des modèles](docs/captures/modelisation.png)
 
 ### 4. Évaluation
-(docs/captures/evaluation.png)
+![Évaluation](docs/captures/evaluation.png)
 
 ### 5. Explainable AI : explications globales
-(docs/captures/explainable.png)
+![Importance des variables](docs/captures/explainable.png)
 
 ### 5. Explainable AI : explication d'un candidat (SHAP / LIME)
-(docs/captures/xai_locale.png)
+![SHAP et LIME](docs/captures/xai_locale.png)
 
 ### 5. Explainable AI : variables sensibles
-(docs/captures/variables_sensibles.png)
+![Variables sensibles](docs/captures/variables_sensibles.png)
 
 ### 6. API FastAPI (documentation)
-(docs/captures/08_api.png)
+![API](docs/captures/08_api.png)
 
 ## Structure du dépôt
 
