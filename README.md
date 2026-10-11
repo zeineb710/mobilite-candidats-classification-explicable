@@ -1,8 +1,5 @@
 # Mobilité des candidats Data Scientists : classification explicable
 
-Projet **Challenge 1** du cours Data Mining (ENSI, filière II3, 2026-2027), encadré par Rym Besrour.
-Cas n°9 du catalogue : **HR Analytics, Job Change of Data Scientists** (Kaggle).
-
 Application web interactive qui charge les données, entraîne et compare cinq modèles de classification, puis explique leurs décisions (globalement et candidat par candidat) avec SHAP et LIME, dans un langage compréhensible par un décideur RH.
 
 ## Liens
