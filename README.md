@@ -85,7 +85,7 @@ Le genre porte une part très faible de l'importance SHAP (1,6 % pour XGBoost), 
 ![Variables sensibles](docs/captures/variables_sensibles.png)
 
 ### 6. API FastAPI (documentation)
-![API](docs/captures/08_api.png)
+![API](docs/captures/api.png)
 
 ## Structure du dépôt
 
